@@ -65,7 +65,7 @@ export default function AddEditMovie() {
         await addMovie(formData);
         toast.success("🎉 New masterpiece added to your collection!");
       }
-      navigate("/moviesfetch"); // React Router navigation
+      navigate("/reem"); // React Router navigation
     } catch (error) {
       toast.error("Failed to save movie. Please try again.");
     }
@@ -273,7 +273,7 @@ export default function AddEditMovie() {
 
               <button
                 type="button"
-                onClick={() => navigate("/moviesfetch")}
+                onClick={() => navigate("/reem")}
                 className="group relative px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 text-white rounded-xl md:rounded-2xl font-bold text-base md:text-lg shadow-xl md:shadow-2xl hover:shadow-gray-500/20 transition-all duration-300 ease-in-out transform hover:scale-[1.02] border border-gray-600/50 hover:border-gray-500/70 backdrop-blur-sm flex items-center justify-center"
               >
                 <ArrowLeft className="w-5 h-5 md:w-6 md:h-6 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
