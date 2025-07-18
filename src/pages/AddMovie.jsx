@@ -45,7 +45,7 @@ export default function AddEditMovie() {
         setIsEditing(true);
       } else {
         toast.error("Movie not found for editing.");
-        navigate("/moviesfetch"); // Redirect using React Router
+        navigate("/reem"); // Redirect using React Router
       }
     }
   }, [movieId, movies, navigate]);
