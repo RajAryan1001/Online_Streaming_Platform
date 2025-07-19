@@ -15,7 +15,7 @@ const MovieDetailsPage = () => {
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this movie?')) {
       deleteMovie(id);
-      navigate('/moviesfetch');
+      navigate('/reem');
     }
   };
 
@@ -28,7 +28,7 @@ const MovieDetailsPage = () => {
       <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
         <h1 className="text-2xl font-bold mb-4">Movie not found</h1>
         <Link 
-          to="/moviesfetch" 
+          to="/reem" 
           className="text-blue-400 hover:underline"
         >
           Back to Movies
