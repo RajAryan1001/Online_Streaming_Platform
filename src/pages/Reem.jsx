@@ -28,7 +28,7 @@ import {
   Edit,
   Wand2,
   Flame,
-  Target,
+  Targe,
   Scissors,
    CheckCircle // Add this import
   
