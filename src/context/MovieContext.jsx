@@ -130,14 +130,17 @@ const addMovie = async (movieData) => {
     toast.success("Movie deleted successfully!");
   };
 
-  // Toggle favorite status
-  const toggleFavorite = (id) => {
-    setMovies(prevMovies => 
-      prevMovies.map(movie => 
-        movie.id === id ? { ...movie, isFavorite: !movie.isFavorite } : movie
-      )
-    );
-  };
+  // MovieContext.js
+  const toggleFavorite = (movieId) => {
+  setMovies(prevMovies => 
+    prevMovies.map(movie => 
+      movie.id === movieId 
+        ? { ...movie, isFavorite: !movie.isFavorite } 
+        : movie
+    )
+  );
+};
+
 
   return (
     <MovieContext.Provider value={{

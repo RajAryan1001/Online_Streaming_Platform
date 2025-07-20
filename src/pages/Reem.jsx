@@ -1,7 +1,7 @@
 "use client"
-import { useState,useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useMovieContext } from "../context/MovieContext"
-import { toast} from "react-toastify"
+import { toast } from "react-toastify"
 import { Toaster } from 'react-hot-toast';
 import { useNavigate } from "react-router-dom"
 import {
@@ -30,6 +30,8 @@ import {
   Flame,
   Target,
   Scissors,
+   CheckCircle // Add this import
+  
 } from "lucide-react"
 
 const MoviesFetch = () => {
@@ -55,8 +57,8 @@ const MoviesFetch = () => {
   const genres = [...new Set(movies.map((movie) => movie.genre))]
 
   const handleEdit = (movie) => {
-  navigate(`/movies/${movie.id}/edit`, { state: { movieToEdit: movie } })
-}
+    navigate(`/movies/${movie.id}/edit`, { state: { movieToEdit: movie } })
+  }
   const handleDelete = async (movieId) => {
     const success = await deleteMovie(movieId)
     if (success) {
@@ -66,10 +68,9 @@ const MoviesFetch = () => {
   }
 
   const handleToggleFavorite = async (movieId) => {
-    await toggleFavorite(movieId)
-    toast.success("❤️ Favorites updated!")
-  }
-
+  await toggleFavorite(movieId);  // This should be from your context
+  toast.success("❤️ Favorites updated!");
+}
   // Hero Section Component
   const HeroSection = () => {
     return (
@@ -590,240 +591,248 @@ const MoviesFetch = () => {
     )
   }
 
-const MovieDetailsModal = ({
-  movie,
-  onClose,
-  handleToggleFavorite,
-  handleEdit,
-  setShowDeleteConfirm
-}) => {
-  const [isClosing, setIsClosing] = useState(false);
-  const [localFavorite, setLocalFavorite] = useState(movie?.isFavorite || false);
+  const MovieDetailsModal = ({
+    movie,
+    onClose,
+    toggleFavorite,  // Changed from handleToggleFavorite to match prop name
 
-  useEffect(() => {
-    setLocalFavorite(movie?.isFavorite || false);
-  }, [movie]);
+    handleEdit,
+    setShowDeleteConfirm
+  }) => {
+    const [isClosing, setIsClosing] = useState(false);
+    const [localFavorite, setLocalFavorite] = useState(movie?.isFavorite || false);
 
-  if (!movie) return null;
+    useEffect(() => {
+      setLocalFavorite(movie?.isFavorite || false);
+    }, [movie]);
 
-  const handleFavorite = () => {
-    const newFavoriteStatus = !localFavorite;
-    setLocalFavorite(newFavoriteStatus);
-    
-    // Call the parent handler
-    if (typeof handleToggleFavorite === 'function') {
-      handleToggleFavorite(movie.id);
-    } else {
-      console.error('handleToggleFavorite is not a function');
-    }
+    if (!movie) return null;
 
-    // Show toast notification
-    toast.success(
-      <div className="flex items-center">
-        <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
-        {newFavoriteStatus ? 'Added to favorites!' : 'Removed from favorites!'}
-      </div>,
-      {
-        position: 'bottom-center',
-        duration: 2000,
-        style: {
-          background: '#1f2937',
-          color: 'white',
-          borderRadius: '12px',
-          padding: '12px 20px',
-          border: '1px solid #374151'
-        }
+    const handleFavorite = () => {
+      const newFavoriteStatus = !localFavorite;
+      setLocalFavorite(newFavoriteStatus);
+
+      // Call the parent handler
+      if (typeof handleToggleFavorite === 'function') {
+        handleToggleFavorite(movie.id);
+      } else {
+        console.error('handleToggleFavorite is not a function');
       }
-    );
-  };
 
-  const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-    }, 300);
-  };
+      // Show toast notification
+      toast.success(
+        <div className="flex items-center">
+          <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
+          {newFavoriteStatus ? 'Added to favorites!' : 'Removed from favorites!'}
+        </div>,
+        {
+          position: 'bottom-center',
+          duration: 2000,
+          style: {
+            background: '#1f2937',
+            color: 'white',
+            borderRadius: '12px',
+            padding: '12px 20px',
+            border: '1px solid #374151'
+          }
+        }
+      );
+    };
 
-  return (
-    <>
-      <Toaster />
-      <div className={`fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 z-[100] overflow-y-auto
+    const handleClose = () => {
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+      }, 300);
+    };
+
+    return (
+      <>
+        <Toaster />
+        <div className={`fixed inset-0 bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 z-[100] overflow-y-auto
         ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
-        
-        <div className={`relative bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-3xl shadow-2xl max-w-6xl w-full mx-4 my-20 border border-gray-700/50
+
+          <div className={`relative bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 rounded-3xl shadow-2xl max-w-6xl w-full mx-4 my-20 border border-gray-700/50
           ${isClosing ? 'animate-scale-out' : 'animate-scale-in'}`}>
-          
-          {/* Movie Header with Backdrop */}
-          <div
-            className="relative h-80 sm:h-96 md:h-[28rem] bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${movie.tmdbData?.backdrop || movie.poster || '/default-backdrop.jpg'})`,
-              backgroundPosition: 'center center'
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-black/60 to-transparent" />
-            <div className="absolute bottom-8 left-8">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-600 rounded-full blur-lg animate-pulse" />
-                <span className="relative bg-gradient-to-r from-red-600 to-pink-600 text-white text-sm font-black px-6 py-3 rounded-full shadow-xl border border-red-400/30">
-                  {localFavorite ? '⭐ FAVORITE MOVIE' : '🎬 NOW FEATURING'}
-                </span>
-              </div>
-            </div>
-          </div>
 
-          {/* Movie Content */}
-          <div className="p-10 sm:p-12 md:p-16 -mt-24 relative z-10">
-            <h2 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6 drop-shadow-2xl tracking-tight">
-              {movie.title}
-            </h2>
-
-            <div className="flex flex-wrap items-center gap-6 mb-10 text-sm sm:text-base">
-              <span className="flex items-center bg-gradient-to-r from-yellow-500 to-yellow-400 text-black px-6 py-3 rounded-full font-black shadow-xl">
-                <Star className="w-5 h-5 mr-2 fill-current" /> {movie.rating || "N/A"}
-              </span>
-              <span className="bg-gray-700/80 backdrop-blur-sm text-gray-200 px-6 py-3 rounded-full font-bold border border-gray-600/50">
-                {movie.year}
-              </span>
-              <span className="bg-gradient-to-r from-red-600/40 to-pink-600/40 backdrop-blur-sm text-red-300 px-6 py-3 rounded-full font-bold border border-red-500/30">
-                {movie.genre}
-              </span>
-            </div>
-
-            {movie.tmdbData?.tagline && (
-              <p className="text-xl italic text-gray-400 mb-6 font-light">"{movie.tmdbData.tagline}"</p>
-            )}
-
-            <p className="text-xl sm:text-2xl text-gray-300 mb-12 leading-relaxed font-light">
-              {movie.description || "No description available."}
-            </p>
-
-            {/* Cast Section */}
-            <div className="mb-12">
-              <h3 className="text-3xl font-black text-white mb-8 flex items-center">
-                <Film className="w-8 h-8 mr-4 text-red-400" />
-                CAST & CREW
-                <Sparkles className="w-8 h-8 ml-4 text-pink-400" />
-              </h3>
-
-              <div className="overflow-x-auto pb-4">
-                <div className="flex space-x-8 min-w-max">
-                  {movie.cast?.length > 0 ? (
-                    movie.cast.map((actor, index) => (
-                      <div key={index} className="group relative flex-shrink-0 w-40">
-                        <div className="relative aspect-[2/3] overflow-hidden rounded-xl mb-4 shadow-2xl border border-gray-700/50">
-                          {actor.profilePic ? (
-                            <img
-                              src={actor.profilePic}
-                              alt={actor.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                              <User className="w-10 h-10 text-gray-500" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-center">
-                          <p className="font-bold text-white truncate">{actor.name || "Unknown"}</p>
-                          <p className="text-gray-400 text-sm truncate">{actor.character || "Unknown"}</p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-gray-400 py-10">No cast information available</div>
-                  )}
+            {/* Movie Header with Backdrop */}
+            <div
+              className="relative h-80 sm:h-96 md:h-[28rem] bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${movie.tmdbData?.backdrop || movie.poster || '/default-backdrop.jpg'})`,
+                backgroundPosition: 'center center'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-black/60 to-transparent" />
+              <div className="absolute bottom-8 left-8">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-600 rounded-full blur-lg animate-pulse" />
+                  <span className="relative bg-gradient-to-r from-red-600 to-pink-600 text-white text-sm font-black px-6 py-3 rounded-full shadow-xl border border-red-400/30">
+                    {localFavorite ? '⭐ FAVORITE MOVIE' : '🎬 NOW FEATURING'}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Runtime Information */}
-            {movie.tmdbData?.runtime && (
-              <div className="mb-8 flex items-center text-gray-400">
-                <Clock className="w-5 h-5 mr-2" />
-                <span className="font-medium">
-                  {Math.floor(movie.tmdbData.runtime / 60)}h {movie.tmdbData.runtime % 60}m
+            {/* Movie Content */}
+            <div className="p-10 sm:p-12 md:p-16 -mt-24 relative z-10">
+              <h2 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6 drop-shadow-2xl tracking-tight">
+                {movie.title}
+              </h2>
+
+              <div className="flex flex-wrap items-center gap-6 mb-10 text-sm sm:text-base">
+                <span className="flex items-center bg-gradient-to-r from-yellow-500 to-yellow-400 text-black px-6 py-3 rounded-full font-black shadow-xl">
+                  <Star className="w-5 h-5 mr-2 fill-current" /> {movie.rating || "N/A"}
+                </span>
+                <span className="bg-gray-700/80 backdrop-blur-sm text-gray-200 px-6 py-3 rounded-full font-bold border border-gray-600/50">
+                  {movie.year}
+                </span>
+                <span className="bg-gradient-to-r from-red-600/40 to-pink-600/40 backdrop-blur-sm text-red-300 px-6 py-3 rounded-full font-bold border border-red-500/30">
+                  {movie.genre}
                 </span>
               </div>
-            )}
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4 justify-center sm:justify-start">
-              <button
-                onClick={handleFavorite}
-                className="group relative flex items-center justify-center px-6 py-3 bg-gradient-to-r from-pink-600 to-pink-500 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-pink-500/50 transition-all duration-300 hover:scale-[1.02]"
-              >
-                <Heart 
-                  className={`w-5 h-5 mr-2 ${localFavorite ? 'text-red-400 fill-red-400' : 'text-white'}`} 
-                />
-                {localFavorite ? "UNFAVORITE" : "FAVORITE"}
-              </button>
+              {movie.tmdbData?.tagline && (
+                <p className="text-xl italic text-gray-400 mb-6 font-light">"{movie.tmdbData.tagline}"</p>
+              )}
 
-              
-              <button
-                onClick={() => handleEdit(movie)}
-                className="group relative flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-[1.02]"
-              >
-                <Edit className="w-5 h-5 mr-2" />
-                EDIT MOVIE
-              </button>
+              <p className="text-xl sm:text-2xl text-gray-300 mb-12 leading-relaxed font-light">
+                {movie.description || "No description available."}
+              </p>
 
-              <button
-                onClick={() => setShowDeleteConfirm(movie.id)}
-                className="group relative flex items-center justify-center px-6 py-3 bg-gradient-to-r from-red-600 to-pink-500 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-red-500/50 transition-all duration-300 hover:scale-[1.02]"
-              >
-                <Flame className="w-5 h-5 mr-2" />
-                DELETE MOVIE
-              </button>
+              {/* Cast Section */}
+              <div className="mb-12">
+                <h3 className="text-3xl font-black text-white mb-8 flex items-center">
+                  <Film className="w-8 h-8 mr-4 text-red-400" />
+                  CAST & CREW
+                  <Sparkles className="w-8 h-8 ml-4 text-pink-400" />
+                </h3>
 
-              <button
-                onClick={handleClose}
-                className="group relative flex items-center justify-center px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-500 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-gray-500/50 transition-all duration-300 hover:scale-[1.02]"
-              >
-                <X className="w-5 h-5 mr-2" />
-                CLOSE
-              </button>
+                <div className="overflow-x-auto pb-4">
+                  <div className="flex space-x-8 min-w-max">
+                    {movie.cast?.length > 0 ? (
+                      movie.cast.map((actor, index) => (
+                        <div key={index} className="group relative flex-shrink-0 w-40">
+                          <div className="relative aspect-[2/3] overflow-hidden rounded-xl mb-4 shadow-2xl border border-gray-700/50">
+                            {actor.profilePic ? (
+                              <img
+                                src={actor.profilePic}
+                                alt={actor.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                                <User className="w-10 h-10 text-gray-500" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-center">
+                            <p className="font-bold text-white truncate">{actor.name || "Unknown"}</p>
+                            <p className="text-gray-400 text-sm truncate">{actor.character || "Unknown"}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-400 py-10">No cast information available</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Runtime Information */}
+              {movie.tmdbData?.runtime && (
+                <div className="mb-8 flex items-center text-gray-400">
+                  <Clock className="w-5 h-5 mr-2" />
+                  <span className="font-medium">
+                    {Math.floor(movie.tmdbData.runtime / 60)}h {movie.tmdbData.runtime % 60}m
+                  </span>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-4 justify-center sm:justify-start">
+
+                <button
+                  onClick={handleFavorite}  // Use the handler function we created
+                  className={`group/btn relative overflow-hidden p-4 rounded-2xl transition-all ${localFavorite  // Use localFavorite instead of movie.isFavorite
+                      ? "bg-gradient-to-r from-pink-600/90 to-red-600/90"
+                      : "bg-white/10 hover:bg-white/20"
+                    }`}
+                  title={localFavorite ? "Remove from favorites" : "Add to favorites"}
+                >
+                  <Heart
+                    className={`w-6 h-6 ${localFavorite ? "text-red-400 fill-red-400" : "text-white"
+                      }`}
+                  />
+                  {localFavorite && (
+                    <div className="absolute inset-0 bg-pink-500/10 animate-pulse rounded-2xl" />
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleEdit(movie)}
+                  className="group relative flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-[1.02]"
+                >
+                  <Edit className="w-5 h-5 mr-2" />
+                  EDIT MOVIE
+                </button>
+
+                <button
+                  onClick={() => setShowDeleteConfirm(movie.id)}
+                  className="group relative flex items-center justify-center px-6 py-3 bg-gradient-to-r from-red-600 to-pink-500 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-red-500/50 transition-all duration-300 hover:scale-[1.02]"
+                >
+                  <Flame className="w-5 h-5 mr-2" />
+                  DELETE MOVIE
+                </button>
+
+                <button
+                  onClick={handleClose}
+                  className="group relative flex items-center justify-center px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-500 text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-gray-500/50 transition-all duration-300 hover:scale-[1.02]"
+                >
+                  <X className="w-5 h-5 mr-2" />
+                  CLOSE
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </>
-  );
-};
+      </>
+    );
+  };
 
- const DeleteConfirmModal = ({ movieId, onClose, onConfirm }) => {
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[200] animate-fade-in">
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 max-w-md w-full border border-gray-700/50 shadow-2xl">
-        {/* Premium Warning Icon */}
-        <div className="relative w-24 h-24 mx-auto mb-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-500 rounded-full blur-xl animate-pulse" />
-          <div className="relative w-24 h-24 bg-gradient-to-r from-red-600 to-red-500 rounded-full flex items-center justify-center shadow-2xl">
-            <Flame className="w-12 h-12 text-white animate-pulse" />
+  const DeleteConfirmModal = ({ movieId, onClose, onConfirm }) => {
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[200] animate-fade-in">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 max-w-md w-full border border-gray-700/50 shadow-2xl">
+          {/* Premium Warning Icon */}
+          <div className="relative w-24 h-24 mx-auto mb-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-500 rounded-full blur-xl animate-pulse" />
+            <div className="relative w-24 h-24 bg-gradient-to-r from-red-600 to-red-500 rounded-full flex items-center justify-center shadow-2xl">
+              <Flame className="w-12 h-12 text-white animate-pulse" />
+            </div>
+          </div>
+
+          <h3 className="text-2xl font-bold text-center text-white mb-4">Delete Movie?</h3>
+          <p className="text-gray-300 text-center mb-8">Are you sure you want to delete this movie? This action cannot be undone.</p>
+
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onConfirm(movieId)}
+              className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-500 hover:from-red-500 hover:to-pink-400 text-white rounded-lg font-medium transition-all"
+            >
+              Delete
+            </button>
           </div>
         </div>
-        
-        <h3 className="text-2xl font-bold text-center text-white mb-4">Delete Movie?</h3>
-        <p className="text-gray-300 text-center mb-8">Are you sure you want to delete this movie? This action cannot be undone.</p>
-        
-        <div className="flex gap-4 justify-center">
-          <button
-            onClick={onClose}
-            className="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition-all"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => onConfirm(movieId)}
-            className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-500 hover:from-red-500 hover:to-pink-400 text-white rounded-lg font-medium transition-all"
-          >
-            Delete
-          </button>
-        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   if (loading) {
     return (
@@ -842,7 +851,7 @@ const MovieDetailsModal = ({
       </div>
     )
   }
-  
+
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -931,7 +940,7 @@ const MovieDetailsModal = ({
 
       <MovieDetailsModal movie={selectedMovie} onClose={() => setSelectedMovie(null)}
         handleToggleFavorite={toggleFavorite}
-        handleEdit={handleEdit} 
+        handleEdit={handleEdit}
         setShowDeleteConfirm={setShowDeleteConfirm}
       />
 
