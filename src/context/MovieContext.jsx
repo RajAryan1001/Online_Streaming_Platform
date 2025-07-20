@@ -18,62 +18,83 @@ export const MovieProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('movies', JSON.stringify(movies));
   }, [movies]);
+// In your MovieContext.js
+const fetchMovieCast = async (title, year) => {
+  try {
+    // Step 1: Search for movie ID
+    const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(title)}&year=${year}`;
+    const searchRes = await fetch(searchUrl);
+    const searchData = await searchRes.json();
 
-  // Fetch movie cast from TMDB API
-  const fetchMovieCast = async (title, year) => {
-    try {
-      // Step 1: Search for movie ID
-      const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(title)}&year=${year}`;
-      const searchRes = await fetch(searchUrl);
-      const searchData = await searchRes.json();
+    if (!searchData.results?.length) {
+      console.warn("No movie found in TMDB for:", title, year);
+      return [];
+    }
 
-      if (!searchData.results?.length) return [];
+    const movieId = searchData.results[0].id;
 
-      const movieId = searchData.results[0].id;
+    // Step 2: Fetch movie details (for backdrop, runtime, etc.)
+    const movieUrl = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}`;
+    const movieRes = await fetch(movieUrl);
+    const movieData = await movieRes.json();
 
-      // Step 2: Fetch cast using movie ID
-      const creditsUrl = `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${API_KEY}`;
-      const creditsRes = await fetch(creditsUrl);
-      const creditsData = await creditsRes.json();
+    // Step 3: Fetch cast using movie ID
+    const creditsUrl = `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${API_KEY}`;
+    const creditsRes = await fetch(creditsUrl);
+    const creditsData = await creditsRes.json();
 
-      // Format cast data (limit to 10 actors)
-      return creditsData.cast.slice(0, 10).map(actor => ({
+    // Format complete movie data
+    return {
+      cast: creditsData.cast.slice(0, 10).map(actor => ({
         name: actor.name,
         character: actor.character,
         profilePic: actor.profile_path 
           ? `https://image.tmdb.org/t/p/w200${actor.profile_path}`
           : null,
-      }));
-    } catch (error) {
-      console.error("Failed to fetch cast:", error);
-      return [];
-    }
-  };
+      })),
+      tmdbData: {
+        backdrop: movieData.backdrop_path 
+          ? `https://image.tmdb.org/t/p/original${movieData.backdrop_path}`
+          : null,
+        runtime: movieData.runtime,
+        tagline: movieData.tagline,
+        imdb_id: movieData.imdb_id
+      }
+    };
+  } catch (error) {
+    console.error("Failed to fetch movie details:", error);
+    return {
+      cast: [],
+      tmdbData: {}
+    };
+  }
+};
 
-  // Add new movie with cast data
-  const addMovie = async (movieData) => {
-    setLoading(true);
-    try {
-      const cast = await fetchMovieCast(movieData.title, movieData.year);
-      const newMovie = {
-        ...movieData,
-        id: nanoid(),
-        cast,
-        isFavorite: false,
-        createdAt: new Date().toISOString(),
-        rating: 0
-      };
-      setMovies(prev => [...prev, newMovie]);
-      toast.success("Movie added successfully!");
-      return true;
-    } catch (error) {
-      toast.error("Failed to add movie");
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
+const addMovie = async (movieData) => {
+  setLoading(true);
+  try {
+    const { cast, tmdbData } = await fetchMovieCast(movieData.title, movieData.year);
+    
+    const newMovie = {
+      ...movieData,
+      id: nanoid(),
+      cast,
+      tmdbData,
+      isFavorite: false,
+      createdAt: new Date().toISOString(),
+      rating: movieData.rating || 0
+    };
+    
+    setMovies(prev => [...prev, newMovie]);
+    toast.success("Movie added successfully!");
+    return true;
+  } catch (error) {
+    toast.error("Failed to add movie");
+    return false;
+  } finally {
+    setLoading(false);
+  }
+};
   // Update existing movie
   const updateMovie = async (id, updatedData) => {
     setLoading(true);
@@ -109,14 +130,17 @@ export const MovieProvider = ({ children }) => {
     toast.success("Movie deleted successfully!");
   };
 
-  // Toggle favorite status
-  const toggleFavorite = (id) => {
-    setMovies(prevMovies => 
-      prevMovies.map(movie => 
-        movie.id === id ? { ...movie, isFavorite: !movie.isFavorite } : movie
-      )
-    );
-  };
+  // MovieContext.js
+  const toggleFavorite = (movieId) => {
+  setMovies(prevMovies => 
+    prevMovies.map(movie => 
+      movie.id === movieId 
+        ? { ...movie, isFavorite: !movie.isFavorite } 
+        : movie
+    )
+  );
+};
+
 
   return (
     <MovieContext.Provider value={{

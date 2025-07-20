@@ -33,6 +33,7 @@ const MainRoutes = () => {
       <Route path="/movies/:id" element={<MovieDetails />} /> {/* Single route declaration */}
       <Route path="/auth/*" element={<AuthPage />} />
       <Route path="/movies/:id/edit" element={<MovieEdit />} />
+      
       <Route path="/users" 
         element={
           <ProtectedRoute>
