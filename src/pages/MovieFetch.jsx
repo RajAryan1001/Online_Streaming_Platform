@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Star, Plus, Play, ChevronDown, Search, Edit, Trash2, ChevronRight, ChevronLeft } from "lucide-react";
 
+
 const MovieFetch = () => {
   const { movies, loading, deleteMovie, toggleFavorite } = useMovieContext();
   const [searchTerm, setSearchTerm] = useState("");

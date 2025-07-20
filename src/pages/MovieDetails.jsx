@@ -1,173 +1,227 @@
+"use client"
+import { useParams, useNavigate } from "react-router-dom";
+import { useMovieContext } from "../context/MovieContext";
+import { Star, Film, Calendar, Users, Clock, Link as LinkIcon, Heart, X, Edit, Flame, Play } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useMovieContext } from '../context/MovieContext';
-import { Link } from 'react-router-dom';
-import { Heart, ArrowLeft, Play, Edit, Trash2 } from 'lucide-react';
-
-const MovieDetailsPage = () => {
+export default function MovieDetails() {
   const { id } = useParams();
+  const { movies, toggleFavorite, deleteMovie } = useMovieContext();
   const navigate = useNavigate();
-  const { movies, deleteMovie, toggleFavorite } = useMovieContext();
-  
-  const movie = movies.find(movie => movie.id === id);
+  const [movie, setMovie] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this movie?')) {
-      deleteMovie(id);
-      navigate('/reem');
+  useEffect(() => {
+    const foundMovie = movies.find(m => m.id === id);
+    if (!foundMovie) {
+      toast.error("Movie not found");
+      navigate("/reem");
+      return;
     }
-  };
-
-  const handleToggleFavorite = () => {
-    toggleFavorite(id);
-  };
+    setMovie(foundMovie);
+  }, [id, movies, navigate]);
 
   if (!movie) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
-        <h1 className="text-2xl font-bold mb-4">Movie not found</h1>
-        <Link 
-          to="/reem" 
-          className="text-blue-400 hover:underline"
-        >
-          Back to Movies
-        </Link>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative w-24 h-24 mx-auto mb-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-600 rounded-full blur-xl animate-pulse" />
+            <div className="relative w-24 h-24 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-white text-3xl font-black mb-3 tracking-wide">🎬 LOADING CINEMATIC MASTERPIECE</p>
+          <p className="text-gray-400 text-xl font-light">Preparing your premium movie experience...</p>
+        </div>
       </div>
     );
   }
 
+  const handleToggleFavorite = async () => {
+    await toggleFavorite(movie.id);
+    toast.success(movie.isFavorite ? "Removed from favorites" : "Added to favorites!");
+  };
+
+  const handleDelete = async () => {
+    const success = await deleteMovie(movie.id);
+    if (success) {
+      toast.success("Movie removed from your collection");
+      navigate("/movies");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Back Button */}
-      <div className="container mx-auto px-4 py-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center text-gray-300 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Collection
-        </button>
-      </div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Backdrop Image */}
+      {movie.poster && (
+        <div className="relative h-64 md:h-96 w-full overflow-hidden">
+          <img 
+            src={movie.poster} 
+            alt={movie.title}
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent" />
+        </div>
+      )}
 
-      {/* Movie Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-12">
-          {/* Movie Poster */}
-          <div className="lg:w-1/3">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-              <img
-                src={movie.poster}
-                alt={movie.title}
-                className="w-full h-auto object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = 'https://via.placeholder.com/500x750?text=Poster+Not+Available';
-                }}
-              />
-              {/* Favorite Button */}
-              <button
-                onClick={handleToggleFavorite}
-                className={`absolute top-4 right-4 p-3 rounded-full backdrop-blur-sm ${
-                  movie.isFavorite 
-                    ? 'bg-red-500/90 text-white' 
-                    : 'bg-gray-800/80 text-gray-300'
-                } transition-all duration-300 hover:scale-110`}
-                aria-label={movie.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-              >
-                <Heart 
-                  className={`w-6 h-6 ${movie.isFavorite ? 'fill-current' : ''}`}
-                />
-              </button>
-            </div>
+      <div className="container mx-auto px-4 py-8 md:py-12 relative -mt-20">
+        {/* Movie Card */}
+        <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+          {/* Poster */}
+          <div className="md:w-1/3 p-4 flex justify-center">
+            <img 
+              src={movie.poster || 'https://via.placeholder.com/300x450'} 
+              alt={movie.title}
+              className="w-64 h-96 object-cover rounded-lg shadow-lg"
+            />
           </div>
-
-          {/* Movie Details */}
-          <div className="lg:w-2/3">
-            <div className="mb-8">
-              <h1 className="text-4xl md:text-5xl font-black mb-4">{movie.title}</h1>
-              
-              <div className="flex flex-wrap items-center gap-4 mb-6">
-                <span className="flex items-center bg-gradient-to-r from-yellow-500 to-yellow-400 text-black px-4 py-2 rounded-full font-bold">
-                  <Star className="w-4 h-4 mr-2 fill-current" /> {movie.rating || "N/A"}
-                </span>
-                <span className="bg-gray-700/80 backdrop-blur-sm px-4 py-2 rounded-full text-gray-200 border border-gray-600/50">
-                  {movie.year}
-                </span>
-                <span className="bg-gradient-to-r from-red-600/40 to-pink-600/40 backdrop-blur-sm px-4 py-2 rounded-full text-red-300 border border-red-500/30">
-                  {movie.genre}
-                </span>
-              </div>
-
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-3">Synopsis</h2>
-                <p className="text-gray-300 leading-relaxed">{movie.description || 'No description available'}</p>
-              </div>
-
-              {/* Cast Section */}
-              {movie.cast?.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-2xl font-bold mb-4">Cast</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {movie.cast.map((person, index) => (
-                      <div key={index} className="bg-gray-800/50 rounded-lg p-3 backdrop-blur-sm border border-gray-700/50">
-                        {person.profilePic ? (
-                          <img 
-                            src={person.profilePic} 
-                            alt={person.name}
-                            className="w-full h-32 object-cover rounded mb-2"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = 'https://via.placeholder.com/200x300?text=Actor';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-32 bg-gray-700 rounded mb-2 flex items-center justify-center">
-                            <span className="text-gray-400">No image</span>
-                          </div>
-                        )}
-                        <p className="font-semibold text-white truncate">{person.name}</p>
-                        <p className="text-sm text-gray-400 truncate">as {person.character}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-4 mt-8">
-                {movie.trailer && (
-                  <a
-                    href={movie.trailer}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition"
-                  >
-                    <Play className="w-5 h-5 mr-2" />
-                    Watch Trailer
-                  </a>
-                )}
-                <Link
-                  to={`/movies/${movie.id}/edit`}
-                  className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition"
-                >
-                  <Edit className="w-5 h-5 mr-2" />
-                  Edit Movie
-                </Link>
+          
+          {/* Details */}
+          <div className="md:w-2/3 p-6 md:p-8">
+            <div className="flex justify-between items-start">
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">{movie.title}</h1>
+              <div className="flex space-x-4">
                 <button
-                  onClick={handleDelete}
-                  className="flex items-center bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition"
+                  onClick={() => navigate(`/edit-movie/${movie.id}`)}
+                  className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition-colors"
+                  title="Edit"
                 >
-                  <Trash2 className="w-5 h-5 mr-2" />
-                  Delete Movie
+                  <Edit className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="p-2 bg-red-600 rounded-full hover:bg-red-700 transition-colors"
+                  title="Delete"
+                >
+                  <Flame className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleToggleFavorite}
+                  className={`p-2 rounded-full ${movie.isFavorite ? 'bg-pink-600 hover:bg-pink-700' : 'bg-gray-700 hover:bg-gray-600'} transition-colors`}
+                  title={movie.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                >
+                  <Heart className={`w-5 h-5 ${movie.isFavorite ? 'fill-current' : ''}`} />
                 </button>
               </div>
+            </div>
+            
+            {movie.tmdbData?.tagline && (
+              <p className="text-xl text-gray-300 italic mb-4">"{movie.tmdbData.tagline}"</p>
+            )}
+            
+            <div className="flex flex-wrap gap-4 mb-6">
+              <div className="flex items-center text-yellow-400">
+                <Star className="w-5 h-5 mr-1" />
+                <span>{movie.rating || 'N/A'}</span>
+              </div>
+              
+              <div className="flex items-center text-gray-300">
+                <Calendar className="w-5 h-5 mr-1" />
+                <span>{movie.year}</span>
+              </div>
+              
+              {movie.tmdbData?.runtime && (
+                <div className="flex items-center text-gray-300">
+                  <Clock className="w-5 h-5 mr-1" />
+                  <span>{Math.floor(movie.tmdbData.runtime / 60)}h {movie.tmdbData.runtime % 60}m</span>
+                </div>
+              )}
+              
+              <div className="flex items-center text-gray-300">
+                <Film className="w-5 h-5 mr-1" />
+                <span>{movie.genre}</span>
+              </div>
+            </div>
+            
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-2">Overview</h2>
+              <p className="text-gray-300">{movie.description}</p>
+            </div>
+            
+            {/* Cast Section */}
+            {movie.cast?.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4 flex items-center">
+                  <Users className="w-5 h-5 mr-2" />
+                  Cast
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                  {movie.cast.map((actor, index) => (
+                    <div key={index} className="bg-gray-700 rounded-lg p-3 text-center">
+                      {actor.profilePic ? (
+                        <img 
+                          src={actor.profilePic} 
+                          alt={actor.name}
+                          className="w-full h-32 object-cover rounded-md mb-2 mx-auto"
+                        />
+                      ) : (
+                        <div className="w-full h-32 bg-gray-600 rounded-md mb-2 flex items-center justify-center">
+                          <Users className="w-12 h-12 text-gray-400" />
+                        </div>
+                      )}
+                      <h3 className="font-medium truncate">{actor.name}</h3>
+                      <p className="text-sm text-gray-400 truncate">{actor.character}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Links */}
+            <div className="flex flex-wrap gap-4">
+              {movie.trailer && (
+                <a 
+                  href={movie.trailer}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  Watch Trailer
+                </a>
+              )}
+              {movie.tmdbData?.imdb_id && (
+                <a 
+                  href={`https://www.imdb.com/title/${movie.tmdbData.imdb_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg"
+                >
+                  <LinkIcon className="w-5 h-5 mr-2" />
+                  View on IMDB
+                </a>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 border border-gray-700">
+            <h3 className="text-2xl font-bold mb-4 text-red-400">Delete Movie</h3>
+            <p className="text-gray-300 mb-6">
+              Are you sure you want to delete "{movie.title}"? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center"
+              >
+                <Flame className="w-5 h-5 mr-2" />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default MovieDetailsPage;
+}

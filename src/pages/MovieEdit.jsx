@@ -42,6 +42,7 @@ const MovieEdit = () => {
   const navigate = useNavigate()
   const { movies, updateMovie, loading } = useMovieContext()
   const [formData, setFormData] = useState({
+    
     title: "",
     genre: "",
     description: "",
